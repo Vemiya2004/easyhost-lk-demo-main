@@ -13,7 +13,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter basename="/easyhost-demo-main">
+      <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
           {/* CUSTOM ROUTES ABOVE ROUTE */}
