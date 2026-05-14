@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — EasyH</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;color:#111;background:#f7f7f5;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+    .top-bar{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5vw,48px);background:#fff;border-bottom:1px solid #e5e5e5}
+    .top-logo{font-weight:700;font-size:18px;text-decoration:none;color:#111}
+    .top-link{font-size:14px;font-weight:500;color:#888;text-decoration:none;transition:color .2s}
+    .top-link:hover{color:#111}
+    main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+    .card{width:100%;max-width:380px;background:#fff;border:1px solid #e5e5e5;padding:40px 36px;border-radius:2px}
+    .card-heading{font-size:28px;font-weight:700;margin-bottom:6px}
+    .card-sub{font-size:14px;color:#888;margin-bottom:32px}
+    .field{margin-bottom:18px}
+    .field label{display:block;font-size:12px;font-weight:500;color:#888;letter-spacing:.04em;margin-bottom:6px}
+    .field input{
+      width:100%;border:1px solid #e0e0e0;border-radius:4px;
+      padding:12px 14px;font-size:15px;font-family:'Inter',system-ui,sans-serif;
+      background:#fff;outline:none;color:#111;transition:border-color .2s
+    }
+    .field input:focus{border-color:#111}
+    .err{font-size:13px;color:#cc3333;margin-bottom:14px;display:none}
+    .err.show{display:block}
+    .btn-submit{
+      width:100%;background:#111;color:#fff;border:none;border-radius:4px;
+      padding:14px;font-size:15px;font-weight:600;font-family:'Inter',system-ui,sans-serif;
+      cursor:pointer;transition:background .2s
+    }
+    .btn-submit:hover{background:#333}
+    .btn-submit:disabled{opacity:.5;pointer-events:none}
+    .spin{display:inline-block;animation:spin .5s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    footer{padding:20px clamp(20px,5vw,48px);text-align:center}
+    footer span{font-size:12px;color:#bbb}
+  </style>
+</head>
+<body>
+<div class="top-bar">
+  <a href="/" class="top-logo">EasyH</a>
+  <a href="/" class="top-link">← Back to Site</a>
+</div>
+
+<main>
+  <div class="card">
+    <h1 class="card-heading">Sign in</h1>
+    <p class="card-sub">Access the dashboard</p>
+
+    <div class="field">
+      <label>Username</label>
+      <input id="u" type="text" value="admin" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input id="p" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <p class="err" id="err">Incorrect username or password.</p>
+    <button class="btn-submit" id="btn" onclick="doLogin()">Sign In</button>
+  </div>
+</main>
+
+<footer><span>© 2026 EasyH</span></footer>
+
+<script>
+// If already logged in, redirect
+if (localStorage.getItem('easyh_token')) {
+  window.location.href = '/dashboard.html';
+}
+
+async function doLogin() {
+  const u = document.getElementById('u').value.trim();
+  const p = document.getElementById('p').value;
+  const btn = document.getElementById('btn');
+  const err = document.getElementById('err');
+  err.classList.remove('show');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">⟳</span>';
+
+  try {
+    const r = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Failed');
+
+    localStorage.setItem('easyh_token', d.token);
+    localStorage.setItem('easyh_user', d.username);
+    window.location.href = '/dashboard.html';
+  } catch {
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+  }
+}
+</script>
+</body>
+</html>
