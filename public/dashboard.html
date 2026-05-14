@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — EasyH</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;color:#111;background:#f7f7f5;min-height:100vh;-webkit-font-smoothing:antialiased}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit;cursor:pointer}
+    ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:#ddd}
+
+    .hdr{position:sticky;top:0;z-index:100;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,4vw,48px);background:#fff;border-bottom:1px solid #e5e5e5}
+    .hdr-title{font-size:17px;font-weight:700}
+    .hdr-right{display:flex;align-items:center;gap:20px}
+    .hdr-user{font-size:13px;color:#999}
+    .hdr-links{display:flex;gap:16px}
+    .hdr-link{font-size:13px;font-weight:500;color:#888;text-decoration:none;transition:color .2s}
+    .hdr-link:hover{color:#111}
+
+    .body{padding:clamp(24px,4vw,40px) clamp(20px,4vw,48px)}
+
+    /* Stats */
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+    @media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:400px){.stats{grid-template-columns:1fr}}
+    .stat{background:#fff;border:1px solid #e5e5e5;padding:22px 20px;border-radius:2px}
+    .stat-lbl{font-family:'DM Mono',monospace;font-size:10px;color:#999;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+    .stat-val{font-size:32px;font-weight:700;line-height:1}
+    .stat-sub{font-size:12px;color:#bbb;margin-top:4px}
+
+    /* Charts */
+    .charts{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:28px}
+    @media(max-width:700px){.charts{grid-template-columns:1fr}}
+    .chart-box{background:#fff;border:1px solid #e5e5e5;padding:22px;border-radius:2px}
+    .chart-ttl{font-family:'DM Mono',monospace;font-size:10px;color:#999;letter-spacing:.14em;text-transform:uppercase;margin-bottom:18px}
+
+    /* Table */
+    .tbl-box{background:#fff;border:1px solid #e5e5e5;padding:22px;border-radius:2px}
+    .tbl-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+    .tbl-ttl{font-family:'DM Mono',monospace;font-size:10px;color:#999;letter-spacing:.14em;text-transform:uppercase}
+    .search{border:1px solid #e5e5e5;border-radius:4px;padding:8px 14px;font-size:13px;font-family:'Inter',sans-serif;background:#fafaf8;outline:none;width:210px;transition:border-color .2s}
+    .search:focus{border-color:#111}
+
+    .tbl-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    thead th{text-align:left;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#bbb;padding:8px 12px;border-bottom:1px solid #e5e5e5}
+    tbody tr{border-bottom:1px solid #f0f0f0;transition:background .15s}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:#fafaf8}
+    td{padding:11px 12px;font-size:13px;color:#555}
+    td.mono{font-family:'DM Mono',monospace;font-size:11px;color:#bbb}
+
+    .pagi{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid #e5e5e5}
+    .pagi-info{font-size:12px;color:#999}
+    .pagi-btns{display:flex;gap:8px}
+    .pagi-btn{border:1px solid #e5e5e5;border-radius:4px;padding:6px 14px;font-size:12px;background:transparent;cursor:pointer;transition:all .2s}
+    .pagi-btn:hover:not(:disabled){border-color:#111}
+    .pagi-btn:disabled{opacity:.35;pointer-events:none}
+    .empty{text-align:center;padding:44px;font-size:13px;color:#bbb}
+    .spin{display:inline-block;animation:spin .5s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+<header class="hdr">
+  <span class="hdr-title">EasyH Dashboard</span>
+  <div class="hdr-right">
+    <span class="hdr-user" id="hdr-user"></span>
+    <div class="hdr-links">
+      <a href="/" class="hdr-link">← Back to Site</a>
+      <a href="#" class="hdr-link" onclick="doSignOut()">Sign Out</a>
+    </div>
+  </div>
+</header>
+
+<div class="body">
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat"><div class="stat-lbl">Total Generations</div><div class="stat-val" id="s-total">—</div><div class="stat-sub">All time</div></div>
+    <div class="stat"><div class="stat-lbl">Today</div><div class="stat-val" id="s-today">—</div><div class="stat-sub">Generations today</div></div>
+    <div class="stat"><div class="stat-lbl">This Week</div><div class="stat-val" id="s-week">—</div><div class="stat-sub">Last 7 days</div></div>
+    <div class="stat"><div class="stat-lbl">Top City</div><div class="stat-val" id="s-top" style="font-size:20px;margin-top:4px">—</div><div class="stat-sub">Most popular</div></div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts">
+    <div class="chart-box">
+      <div class="chart-ttl">Generations — Last 30 Days</div>
+      <svg id="bar-svg" viewBox="0 0 600 140" preserveAspectRatio="none" style="width:100%;height:140px"></svg>
+    </div>
+    <div class="chart-box">
+      <div class="chart-ttl">By Day of Week</div>
+      <svg id="dow-svg" viewBox="0 0 220 140" style="width:100%;height:140px"></svg>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="tbl-box">
+    <div class="tbl-toolbar">
+      <span class="tbl-ttl">All Generations</span>
+      <input class="search" id="search" placeholder="Search city…" oninput="searchDebounce()" />
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>City</th>
+            <th>Country</th>
+            <th>Date</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body">
+          <tr><td colspan="5" class="empty"><span class="spin">⟳</span> Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagi">
+      <span class="pagi-info" id="pagi-info">—</span>
+      <div class="pagi-btns">
+        <button class="pagi-btn" id="btn-prev" onclick="changePage(-1)">← Prev</button>
+        <button class="pagi-btn" id="btn-next" onclick="changePage(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== AUTH ===== */
+const token = localStorage.getItem('easyh_token');
+const user = localStorage.getItem('easyh_user');
+if (!token) { window.location.href = '/login.html'; }
+document.getElementById('hdr-user').textContent = user || '';
+
+function doSignOut() {
+  localStorage.removeItem('easyh_token');
+  localStorage.removeItem('easyh_user');
+  window.location.href = '/login.html';
+}
+
+function ah() { return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }; }
+
+/* ===== INIT ===== */
+window.addEventListener('DOMContentLoaded', () => {
+  loadStats();
+  loadTable();
+});
+
+/* ===== STATS ===== */
+async function loadStats() {
+  try {
+    const r = await fetch('/api/admin/stats', { headers: ah() });
+    if (r.status === 401) { doSignOut(); return; }
+    const d = await r.json();
+
+    document.getElementById('s-total').textContent = d.total;
+
+    // Today & week from last30
+    const today = new Date().toISOString().slice(0,10);
+    const last7 = new Date(Date.now() - 6*86400000).toISOString().slice(0,10);
+    let todayCount = 0, weekCount = 0;
+    const cityMap = {};
+    (d.last30 || []).forEach(row => {
+      if (row.day === today) todayCount += row.count;
+      if (row.day >= last7) weekCount += row.count;
+    });
+    document.getElementById('s-today').textContent = todayCount;
+    document.getElementById('s-week').textContent = weekCount;
+
+    // Top city from generations
+    if (d.topCities && d.topCities.length) {
+      document.getElementById('s-top').textContent = d.topCities[0].city || '—';
+    }
+
+    drawBarChart(d.last30 || []);
+    drawDowChart(d.byDow || []);
+  } catch(e) { console.error(e); }
+}
+
+/* ===== BAR CHART ===== */
+function drawBarChart(data) {
+  const svg = document.getElementById('bar-svg');
+  svg.innerHTML = '';
+  if (!data.length) {
+    svg.innerHTML = '<text x="300" y="75" text-anchor="middle" font-family="DM Mono,monospace" font-size="11" fill="#bbb">No data</text>';
+    return;
+  }
+  const W=600,H=140,PT=10,PB=28,PL=22,PR=8;
+  const cW=W-PL-PR, cH=H-PT-PB;
+  const maxV=Math.max(...data.map(d=>d.count),1);
+  const bW=Math.min(16,(cW/data.length)-2);
+
+  [0.5,1].forEach(f=>{
+    const y=PT+cH*(1-f);
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',PL);line.setAttribute('x2',W-PR);
+    line.setAttribute('y1',y);line.setAttribute('y2',y);
+    line.setAttribute('stroke','#f0f0f0');line.setAttribute('stroke-width','0.5');
+    svg.appendChild(line);
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',PL-3);t.setAttribute('y',y+3);
+    t.setAttribute('text-anchor','end');t.setAttribute('font-family','DM Mono,monospace');
+    t.setAttribute('font-size','7.5');t.setAttribute('fill','#bbb');
+    t.textContent=Math.round(maxV*f);
+    svg.appendChild(t);
+  });
+
+  data.forEach((d,i)=>{
+    const x=PL+(i/data.length)*cW+(cW/data.length-bW)/2;
+    const bH=Math.max(1,(d.count/maxV)*cH);
+    const y=PT+cH-bH;
+    const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x',x);rect.setAttribute('y',y);
+    rect.setAttribute('width',bW);rect.setAttribute('height',bH);
+    rect.setAttribute('fill','#111');rect.setAttribute('opacity','0.8');
+    svg.appendChild(rect);
+    if(i===0||i===data.length-1||i%7===0){
+      const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x',x+bW/2);t.setAttribute('y',H-4);
+      t.setAttribute('text-anchor','middle');t.setAttribute('font-family','DM Mono,monospace');
+      t.setAttribute('font-size','7');t.setAttribute('fill','#bbb');
+      t.textContent=(d.day||'').slice(5);
+      svg.appendChild(t);
+    }
+  });
+}
+
+/* ===== DOW CHART ===== */
+function drawDowChart(data) {
+  const svg = document.getElementById('dow-svg');
+  svg.innerHTML = '';
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const counts=new Array(7).fill(0);
+  (data||[]).forEach(d=>{if(d.dow>=0&&d.dow<7) counts[d.dow]=d.count;});
+  const max=Math.max(...counts,1);
+  const W=220,H=140,PT=10,PB=22,PL=8,PR=8;
+  const cW=W-PL-PR,cH=H-PT-PB;
+  const bW=(cW/7)-3;
+  counts.forEach((c,i)=>{
+    const x=PL+i*(cW/7)+1;
+    const bH=Math.max(1,(c/max)*cH);
+    const y=PT+cH-bH;
+    const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x',x);rect.setAttribute('y',y);
+    rect.setAttribute('width',bW);rect.setAttribute('height',bH);
+    rect.setAttribute('fill','#111');rect.setAttribute('opacity','0.75');
+    svg.appendChild(rect);
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',x+bW/2);t.setAttribute('y',H-4);
+    t.setAttribute('text-anchor','middle');t.setAttribute('font-family','DM Mono,monospace');
+    t.setAttribute('font-size','8');t.setAttribute('fill','#bbb');
+    t.textContent=days[i];
+    svg.appendChild(t);
+  });
+}
+
+/* ===== TABLE ===== */
+let currentPage=1, totalPages=1, searchTimer=null;
+
+async function loadTable(page=1,search='') {
+  currentPage=page;
+  const tbody=document.getElementById('tbl-body');
+  tbody.innerHTML=`<tr><td colspan="5" class="empty"><span class="spin">⟳</span></td></tr>`;
+  try {
+    const r=await fetch(`/api/admin/generations?page=${page}&search=${encodeURIComponent(search)}`,{headers:ah()});
+    if(r.status===401){doSignOut();return;}
+    const d=await r.json();
+    totalPages=d.pages||1;
+    document.getElementById('pagi-info').textContent=`${d.rows.length} of ${d.total} records`;
+    document.getElementById('btn-prev').disabled=page<=1;
+    document.getElementById('btn-next').disabled=page>=totalPages;
+    if(!d.rows.length){tbody.innerHTML='<tr><td colspan="5" class="empty">No records yet</td></tr>';return;}
+    const fmt=ts=>ts?new Date(ts*1000).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—';
+    const fmtT=ts=>ts?new Date(ts*1000).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'—';
+    tbody.innerHTML=d.rows.map((row,i)=>`
+      <tr>
+        <td class="mono">${(page-1)*20+i+1}</td>
+        <td>${esc(row.city||'—')}</td>
+        <td>${esc(row.country||'—')}</td>
+        <td>${fmt(row.created_at)}</td>
+        <td>${fmtT(row.created_at)}</td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML=`<tr><td colspan="5" class="empty">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function changePage(dir){
+  const n=currentPage+dir;
+  if(n<1||n>totalPages)return;
+  loadTable(n,document.getElementById('search').value);
+}
+
+function searchDebounce(){
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(()=>loadTable(1,document.getElementById('search').value),280);
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+</body>
+</html>

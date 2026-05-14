@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EasyH Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --white: #ffffff;
+      --off-white: #fafaf8;
+      --black: #000000;
+      --near-black: #111111;
+      --gray-600: #444;
+      --gray-400: #888;
+      --gray-200: #ccc;
+      --gray-100: #e8e8e4;
+      --border: #e0e0dc;
+      --error: #b83224;
+      --green: #2d7a3a;
+      --font-serif: 'Playfair Display', Georgia, serif;
+      --font-mono: 'DM Mono', 'Courier New', monospace;
+      --ease: 0.25s ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; min-height: 100%;
+      background: var(--off-white);
+      color: var(--near-black);
+      font-family: var(--font-mono);
+    }
+    button { font-family: inherit; cursor: pointer; }
+    input { font-family: inherit; }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--gray-200); }
+
+    /* ---- LAYOUT ---- */
+    .view { display: none; }
+    .view.show { display: block; }
+
+    /* ---- LOGIN ---- */
+    .login-wrap {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px;
+    }
+    .login-card {
+      width: 100%; max-width: 380px;
+      border: 1px solid var(--border);
+      background: var(--white);
+      padding: 44px 36px;
+    }
+    .login-heading {
+      font-family: var(--font-serif);
+      font-size: 36px; font-weight: 900; font-style: italic;
+      color: var(--near-black); margin-bottom: 6px;
+    }
+    .login-sub {
+      font-size: 11px; color: var(--gray-400);
+      letter-spacing: 0.08em; margin-bottom: 36px;
+    }
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block; font-size: 10px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--gray-400); margin-bottom: 8px;
+    }
+    .field input {
+      width: 100%; border: 1px solid var(--border);
+      padding: 11px 14px; font-size: 13px;
+      background: var(--white); outline: none;
+      transition: border-color var(--ease);
+      color: var(--near-black);
+    }
+    .field input:focus { border-color: var(--near-black); }
+    .login-err {
+      font-size: 11px; color: var(--error);
+      margin-bottom: 14px; display: none; letter-spacing: 0.04em;
+    }
+    .login-err.show { display: block; }
+    .btn-login {
+      width: 100%; background: var(--black); color: var(--white);
+      border: none; padding: 13px; font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      cursor: pointer; transition: background var(--ease);
+    }
+    .btn-login:hover { background: #222; }
+    .btn-login:disabled { opacity: 0.5; pointer-events: none; }
+
+    /* ---- DASHBOARD ---- */
+    .dash-header {
+      border-bottom: 1px solid var(--border);
+      background: var(--white);
+      padding: 0 clamp(20px, 4vw, 48px);
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .dash-brand {
+      font-family: var(--font-mono); font-size: 12px;
+      font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase;
+    }
+    .dash-header-right { display: flex; align-items: center; gap: 16px; }
+    .dash-user { font-size: 10px; color: var(--gray-400); letter-spacing: 0.1em; }
+    .btn-logout {
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--gray-400); background: transparent;
+      border: 1px solid var(--border); padding: 7px 14px;
+      cursor: pointer; transition: all var(--ease);
+    }
+    .btn-logout:hover { border-color: var(--near-black); color: var(--near-black); }
+
+    .dash-body { padding: clamp(24px, 4vw, 48px); }
+
+    /* Stat cards */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 720px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 440px) { .stats-grid { grid-template-columns: 1fr; } }
+
+    .stat-card {
+      border: 1px solid var(--border); background: var(--white);
+      padding: 24px 20px;
+    }
+    .stat-label {
+      font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--gray-400); margin-bottom: 10px;
+    }
+    .stat-val {
+      font-family: var(--font-serif);
+      font-size: 36px; font-weight: 900;
+      color: var(--near-black); line-height: 1;
+    }
+    .stat-sub { font-size: 10px; color: var(--gray-400); margin-top: 6px; }
+
+    /* Charts */
+    .charts-row {
+      display: grid; grid-template-columns: 2fr 1fr; gap: 16px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 700px) { .charts-row { grid-template-columns: 1fr; } }
+
+    .chart-card {
+      border: 1px solid var(--border); background: var(--white); padding: 24px;
+    }
+    .chart-title {
+      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--gray-400); margin-bottom: 20px;
+    }
+    #bar-chart { width: 100%; height: 140px; }
+    #donut-chart { width: 100%; height: 140px; }
+
+    /* Table */
+    .table-card {
+      border: 1px solid var(--border); background: var(--white); padding: 24px;
+    }
+    .table-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 18px; gap: 14px; flex-wrap: wrap;
+    }
+    .table-title { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray-400); }
+    .search-wrap { position: relative; }
+    .search-input {
+      border: 1px solid var(--border); padding: 8px 14px;
+      font-family: var(--font-mono); font-size: 11px;
+      background: var(--off-white); outline: none; width: 220px;
+      transition: border-color var(--ease);
+    }
+    .search-input:focus { border-color: var(--near-black); }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align: left; font-size: 9px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--gray-400); padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background var(--ease); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--off-white); }
+    tbody td { padding: 11px 12px; font-size: 11px; color: var(--gray-600); }
+    .td-id { font-family: var(--font-mono); color: var(--gray-400); font-size: 10px; }
+    .badge {
+      display: inline-block; padding: 2px 8px;
+      font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .badge-free { border: 1px solid var(--gray-200); color: var(--gray-400); }
+    .badge-premium { border: 1px solid var(--near-black); color: var(--near-black); }
+    .badge-paid { background: #e8f5ea; color: var(--green); border: 1px solid #b8dfc0; }
+    .badge-pending { background: #fdf6e3; color: #8a6914; border: 1px solid #e8d89a; }
+
+    .pagination {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 16px; padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .page-info { font-size: 10px; color: var(--gray-400); letter-spacing: 0.06em; }
+    .page-btns { display: flex; gap: 8px; }
+    .page-btn {
+      border: 1px solid var(--border); padding: 6px 12px;
+      font-family: var(--font-mono); font-size: 10px;
+      background: transparent; cursor: pointer;
+      transition: all var(--ease); letter-spacing: 0.08em;
+    }
+    .page-btn:hover:not(:disabled) { border-color: var(--near-black); }
+    .page-btn:disabled { opacity: 0.3; pointer-events: none; }
+
+    .empty-state {
+      text-align: center; padding: 48px;
+      font-size: 11px; color: var(--gray-400); letter-spacing: 0.08em;
+    }
+
+    .spin { display: inline-block; animation: spin 0.5s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="view-login" class="view show">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-heading">Admin</div>
+      <p class="login-sub">EasyH Map Portrait Dashboard</p>
+      <div class="field">
+        <label>Username</label>
+        <input id="login-user" type="text" value="admin" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <p class="login-err" id="login-err">Invalid credentials. Please try again.</p>
+      <button class="btn-login" id="login-btn" onclick="doLogin()">Sign In →</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="view-dash" class="view">
+  <header class="dash-header">
+    <span class="dash-brand">EASYH · Admin</span>
+    <div class="dash-header-right">
+      <span class="dash-user" id="dash-user">—</span>
+      <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <p class="stat-label">Total Generations</p>
+        <div class="stat-val" id="s-total">—</div>
+        <p class="stat-sub">All time</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Free Portraits</p>
+        <div class="stat-val" id="s-free">—</div>
+        <p class="stat-sub">No payment</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Premium Portraits</p>
+        <div class="stat-val" id="s-premium">—</div>
+        <p class="stat-sub">Paid users</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Revenue</p>
+        <div class="stat-val" id="s-revenue">—</div>
+        <p class="stat-sub">@ $2.99 / premium</p>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <p class="chart-title">Generations — Last 30 Days</p>
+        <svg id="bar-chart" viewBox="0 0 600 140" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="chart-card">
+        <p class="chart-title">Free vs Premium</p>
+        <svg id="donut-chart" viewBox="0 0 140 140"></svg>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="table-title">All Generations</span>
+        <input
+          class="search-input" id="search-input"
+          placeholder="Search city..."
+          oninput="searchDebounce()"
+        />
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>City</th>
+              <th>Country</th>
+              <th>Plan</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="gen-tbody">
+            <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span class="page-info" id="page-info">—</span>
+        <div class="page-btns">
+          <button class="page-btn" id="btn-prev" onclick="changePage(-1)">← Prev</button>
+          <button class="page-btn" id="btn-next" onclick="changePage(1)">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================================================
+   STATE
+=================================================== */
+let token = localStorage.getItem('easyh_admin_token');
+let currentUser = localStorage.getItem('easyh_admin_user');
+let currentPage = 1;
+let totalPages = 1;
+let searchTimer = null;
+
+/* ===================================================
+   INIT
+=================================================== */
+window.addEventListener('DOMContentLoaded', () => {
+  if (token) {
+    showDash();
+    loadStats();
+    loadGenerations();
+  }
+});
+
+/* ===================================================
+   AUTH
+=================================================== */
+async function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-err');
+  const btn = document.getElementById('login-btn');
+  err.classList.remove('show');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">⟳</span> Signing in...';
+
+  try {
+    const r = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Login failed');
+
+    token = data.token;
+    currentUser = data.username;
+    localStorage.setItem('easyh_admin_token', token);
+    localStorage.setItem('easyh_admin_user', currentUser);
+
+    showDash();
+    loadStats();
+    loadGenerations();
+  } catch (e) {
+    err.textContent = e.message || 'Invalid credentials.';
+    err.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sign In →';
+  }
+}
+
+function doLogout() {
+  token = null; currentUser = null;
+  localStorage.removeItem('easyh_admin_token');
+  localStorage.removeItem('easyh_admin_user');
+  document.getElementById('view-dash').classList.remove('show');
+  document.getElementById('view-login').classList.add('show');
+}
+
+function showDash() {
+  document.getElementById('view-login').classList.remove('show');
+  document.getElementById('view-dash').classList.add('show');
+  document.getElementById('dash-user').textContent = currentUser || 'admin';
+}
+
+function authHeaders() {
+  return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+}
+
+/* ===================================================
+   STATS
+=================================================== */
+async function loadStats() {
+  try {
+    const r = await fetch('/api/admin/stats', { headers: authHeaders() });
+    if (r.status === 401) { doLogout(); return; }
+    const d = await r.json();
+
+    document.getElementById('s-total').textContent = d.total;
+    document.getElementById('s-free').textContent = d.free;
+    document.getElementById('s-premium').textContent = d.premium;
+    document.getElementById('s-revenue').textContent = `$${d.revenue}`;
+
+    drawBarChart(d.last30);
+    drawDonut(d.free, d.premium);
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+/* ===================================================
+   BAR CHART (SVG)
+=================================================== */
+function drawBarChart(data) {
+  const svg = document.getElementById('bar-chart');
+  svg.innerHTML = '';
+  if (!data || data.length === 0) {
+    svg.innerHTML = '<text x="300" y="70" text-anchor="middle" font-family="DM Mono, monospace" font-size="11" fill="#aaa">No data yet</text>';
+    return;
+  }
+
+  const W = 600, H = 140;
+  const PAD = { t: 8, r: 8, b: 28, l: 24 };
+  const chartW = W - PAD.l - PAD.r;
+  const chartH = H - PAD.t - PAD.b;
+  const maxVal = Math.max(...data.map(d => d.count), 1);
+  const barW = Math.min(18, (chartW / data.length) - 2);
+
+  // Grid lines
+  [0.25, 0.5, 0.75, 1].forEach(f => {
+    const y = PAD.t + chartH * (1 - f);
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', PAD.l); line.setAttribute('x2', W - PAD.r);
+    line.setAttribute('y1', y); line.setAttribute('y2', y);
+    line.setAttribute('stroke', '#e8e8e4'); line.setAttribute('stroke-width', '0.5');
+    svg.appendChild(line);
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.setAttribute('x', PAD.l - 4); label.setAttribute('y', y + 3);
+    label.setAttribute('text-anchor', 'end');
+    label.setAttribute('font-family', 'DM Mono, monospace'); label.setAttribute('font-size', '8');
+    label.setAttribute('fill', '#aaa');
+    label.textContent = Math.round(maxVal * f);
+    svg.appendChild(label);
+  });
+
+  data.forEach((d, i) => {
+    const x = PAD.l + (i / data.length) * chartW + (chartW / data.length - barW) / 2;
+    const barH = (d.count / maxVal) * chartH;
+    const y = PAD.t + chartH - barH;
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', x); rect.setAttribute('y', y);
+    rect.setAttribute('width', barW); rect.setAttribute('height', barH);
+    rect.setAttribute('fill', '#111111'); rect.setAttribute('opacity', '0.85');
+    svg.appendChild(rect);
+
+    // Date label every 7th
+    if (i % 7 === 0 || i === data.length - 1) {
+      const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', x + barW / 2); label.setAttribute('y', H - 4);
+      label.setAttribute('text-anchor', 'middle');
+      label.setAttribute('font-family', 'DM Mono, monospace'); label.setAttribute('font-size', '7.5');
+      label.setAttribute('fill', '#aaa');
+      label.textContent = (d.day || '').slice(5); // MM-DD
+      svg.appendChild(label);
+    }
+  });
+}
+
+/* ===================================================
+   DONUT CHART (SVG)
+=================================================== */
+function drawDonut(free, premium) {
+  const svg = document.getElementById('donut-chart');
+  svg.innerHTML = '';
+  const total = (free || 0) + (premium || 0);
+  const cx = 70, cy = 70, r = 50, sw = 22;
+
+  if (total === 0) {
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r);
+    circle.setAttribute('fill', 'none'); circle.setAttribute('stroke', '#e8e8e4'); circle.setAttribute('stroke-width', sw);
+    svg.appendChild(circle);
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.setAttribute('x', cx); label.setAttribute('y', cy + 4);
+    label.setAttribute('text-anchor', 'middle');
+    label.setAttribute('font-family', 'DM Mono, monospace'); label.setAttribute('font-size', '10');
+    label.setAttribute('fill', '#aaa');
+    label.textContent = 'No data';
+    svg.appendChild(label);
+    return;
+  }
+
+  const circumference = 2 * Math.PI * r;
+  const freePct = (free || 0) / total;
+  const premPct = (premium || 0) / total;
+
+  function arc(pct, offset, color) {
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r);
+    circle.setAttribute('fill', 'none'); circle.setAttribute('stroke', color); circle.setAttribute('stroke-width', sw);
+    circle.setAttribute('stroke-dasharray', `${pct * circumference} ${circumference}`);
+    circle.setAttribute('stroke-dashoffset', -offset * circumference);
+    circle.setAttribute('transform', `rotate(-90 ${cx} ${cy})`);
+    svg.appendChild(circle);
+  }
+
+  arc(freePct, 0, '#e0e0dc');
+  arc(premPct, freePct, '#111111');
+
+  // Center text
+  const t1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t1.setAttribute('x', cx); t1.setAttribute('y', cy + 3);
+  t1.setAttribute('text-anchor', 'middle');
+  t1.setAttribute('font-family', 'DM Mono, monospace'); t1.setAttribute('font-size', '13');
+  t1.setAttribute('font-weight', '500'); t1.setAttribute('fill', '#111');
+  t1.textContent = total;
+  svg.appendChild(t1);
+
+  const t2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t2.setAttribute('x', cx); t2.setAttribute('y', cy + 16);
+  t2.setAttribute('text-anchor', 'middle');
+  t2.setAttribute('font-family', 'DM Mono, monospace'); t2.setAttribute('font-size', '8');
+  t2.setAttribute('fill', '#aaa');
+  t2.textContent = 'total';
+  svg.appendChild(t2);
+
+  // Legend
+  [
+    { label: 'Free', color: '#e0e0dc', val: free || 0 },
+    { label: 'Premium', color: '#111', val: premium || 0 },
+  ].forEach((item, i) => {
+    const y = 102 + i * 16;
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', 20); rect.setAttribute('y', y - 6);
+    rect.setAttribute('width', 10); rect.setAttribute('height', 10);
+    rect.setAttribute('fill', item.color); rect.setAttribute('stroke', '#ccc'); rect.setAttribute('stroke-width', '0.5');
+    svg.appendChild(rect);
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', 34); t.setAttribute('y', y + 2);
+    t.setAttribute('font-family', 'DM Mono, monospace'); t.setAttribute('font-size', '8.5');
+    t.setAttribute('fill', '#666');
+    t.textContent = `${item.label}: ${item.val}`;
+    svg.appendChild(t);
+  });
+}
+
+/* ===================================================
+   GENERATIONS TABLE
+=================================================== */
+async function loadGenerations(page = 1, search = '') {
+  currentPage = page;
+  const tbody = document.getElementById('gen-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><span class="spin">⟳</span> Loading...</td></tr>';
+
+  try {
+    const params = new URLSearchParams({ page, search });
+    const r = await fetch(`/api/admin/generations?${params}`, { headers: authHeaders() });
+    if (r.status === 401) { doLogout(); return; }
+    const d = await r.json();
+
+    totalPages = d.pages || 1;
+    document.getElementById('page-info').textContent = `${d.rows.length} of ${d.total} records`;
+    document.getElementById('btn-prev').disabled = page <= 1;
+    document.getElementById('btn-next').disabled = page >= totalPages;
+
+    if (!d.rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No generations yet</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = d.rows.map(row => `
+      <tr>
+        <td class="td-id">${String(row.id).slice(0,8)}…</td>
+        <td>${escHtml(row.city || '—')}</td>
+        <td>${escHtml(row.country || '—')}</td>
+        <td><span class="badge badge-${row.plan}">${row.plan || 'free'}</span></td>
+        <td><span class="badge badge-${row.payment_status}">${row.payment_status || '—'}</span></td>
+        <td>${row.created_at ? new Date(row.created_at * 1000).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) : '—'}</td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error loading data: ${e.message}</td></tr>`;
+  }
+}
+
+function changePage(dir) {
+  const next = currentPage + dir;
+  if (next < 1 || next > totalPages) return;
+  loadGenerations(next, document.getElementById('search-input').value);
+}
+
+function searchDebounce() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    loadGenerations(1, document.getElementById('search-input').value);
+  }, 300);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
