@@ -362,7 +362,7 @@ async function doLogin() {
   btn.innerHTML = '<span class="spin">⟳</span> Signing in...';
 
   try {
-    const r = await fetch('/api/admin/login', {
+    const r = await fetch('/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: u, password: p }),
@@ -410,7 +410,7 @@ function authHeaders() {
 =================================================== */
 async function loadStats() {
   try {
-    const r = await fetch('/api/admin/stats', { headers: authHeaders() });
+    const r = await fetch('/admin/stats', { headers: authHeaders() });
     if (r.status === 401) { doLogout(); return; }
     const d = await r.json();
 
@@ -573,7 +573,7 @@ async function loadGenerations(page = 1, search = '') {
 
   try {
     const params = new URLSearchParams({ page, search });
-    const r = await fetch(`/api/admin/generations?${params}`, { headers: authHeaders() });
+    const r = await fetch(`/admin/generations?${params}`, { headers: authHeaders() });
     if (r.status === 401) { doLogout(); return; }
     const d = await r.json();
 
