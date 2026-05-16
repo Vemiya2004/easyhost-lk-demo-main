@@ -82,7 +82,7 @@ async function doLogin() {
   btn.innerHTML = '<span class="spin">⟳</span>';
 
   try {
-    const r = await fetch('/api/admin/login', {
+    const r = await fetch('https://easyhost-backend.onrender.com/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: u, password: p }),
