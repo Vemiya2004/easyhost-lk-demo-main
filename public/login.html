@@ -69,7 +69,7 @@
 <script>
 // If already logged in, redirect
 if (localStorage.getItem('easyh_token')) {
-  window.location.href = '/dist/public/dashboard.html';
+  window.location.href = '/public/dashboard.html';
 }
 
 async function doLogin() {
@@ -92,7 +92,7 @@ async function doLogin() {
 
     localStorage.setItem('easyh_token', d.token);
     localStorage.setItem('easyh_user', d.username);
-    window.location.href = '/dist/public/dashboard.html';
+    window.location.href = '/public/dashboard.html';
   } catch {
     err.classList.add('show');
     btn.disabled = false;
