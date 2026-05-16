@@ -92,7 +92,7 @@ async function doLogin() {
 
     localStorage.setItem('easyh_token', d.token);
     localStorage.setItem('easyh_user', d.username);
-    window.location.href = '/dashboard.html';
+    window.location.href = '/dist/public/dashboard.html';
   } catch {
     err.classList.add('show');
     btn.disabled = false;
