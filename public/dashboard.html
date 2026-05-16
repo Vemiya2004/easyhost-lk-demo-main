@@ -133,13 +133,13 @@
 /* ===== AUTH ===== */
 const token = localStorage.getItem('easyh_token');
 const user = localStorage.getItem('easyh_user');
-if (!token) { window.location.href = '/login.html'; }
+if (!token) { window.location.href = '/public/login.html'; }
 document.getElementById('hdr-user').textContent = user || '';
 
 function doSignOut() {
   localStorage.removeItem('easyh_token');
   localStorage.removeItem('easyh_user');
-  window.location.href = '/login.html';
+  window.location.href = '/public/login.html';
 }
 
 function ah() { return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }; }
